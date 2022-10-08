@@ -16,7 +16,7 @@ cd src/core/plugins
 **SSH**
 
 ```
-git@github.com:Stuyk/athena-plugin-atm.git
+git clone git@github.com:Stuyk/athena-plugin-atm.git
 ```
 
 **HTTPS**
