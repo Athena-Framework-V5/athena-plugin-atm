@@ -16,12 +16,12 @@ cd src/core/plugins
 **SSH**
 
 ```
-git clone git@github.com:Stuyk/athena-plugin-atm.git
+git clone git@github.com:Athena-Roleplay-Framework/athena-plugin-atm.git
 ```
 
 **HTTPS**
 ```
-git clone https://github.com/Stuyk/athena-plugin-atm
+git clone https://github.com/Athena-Roleplay-Framework/athena-plugin-atm
 ```
 
 4. Start the Server
