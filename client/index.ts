@@ -1,8 +1,8 @@
 import * as alt from 'alt-client';
-import { WebViewController } from '../../../client/extensions/view2';
-import ViewModel from '../../../client/models/viewModel';
-import { isAnyMenuOpen } from '../../../client/utility/menus';
-import { SYSTEM_EVENTS } from '../../../shared/enums/system';
+import { WebViewController } from '@AthenaClient/extensions/view2';
+import ViewModel from '@AthenaClient/models/viewModel';
+import { isAnyMenuOpen } from '@AthenaClient/utility/menus';
+import { SYSTEM_EVENTS } from '@AthenaShared/enums/system';
 import { ATM_INTERACTIONS } from '../shared/events';
 import { LOCALE_ATM_VIEW } from '../shared/locales';
 
@@ -68,4 +68,4 @@ class AtmView implements ViewModel {
 }
 
 alt.onServer(ATM_INTERACTIONS.OPEN, AtmView.open);
-alt.on(SYSTEM_EVENTS.META_CHANGED, AtmView.change);
+alt.on('localMetaChange', AtmView.change);

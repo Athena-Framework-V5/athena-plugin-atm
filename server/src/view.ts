@@ -1,13 +1,12 @@
 import * as alt from 'alt-server';
 
-import atms from '../../../../shared/information/atms';
-import { ServerBlipController } from '../../../../server/systems/blip';
-import { InteractionController } from '../../../../server/systems/interaction';
-import { CurrencyTypes } from '../../../../shared/enums/currency';
-import { LocaleController } from '../../../../shared/locale/locale';
-import { LOCALE_KEYS } from '../../../../shared/locale/languages/keys';
-import { Character } from '../../../../shared/interfaces/character';
-import { Collections } from '../../../../server/interface/iDatabaseCollections';
+import atms from '@AthenaShared/information/atms';
+import { ServerBlipController } from '@AthenaServer/systems/blip';
+import { InteractionController } from '@AthenaServer/systems/interaction';
+import { CurrencyTypes } from '@AthenaShared/enums/currency';
+import { LocaleController } from '@AthenaShared/locale/locale';
+import { LOCALE_KEYS } from '@AthenaShared/locale/languages/keys';
+import { Character } from '@AthenaShared/interfaces/character';
 import { ATM_INTERACTIONS } from '../../shared/events';
 import { Athena } from '../../../../server/api/athena';
 
@@ -143,7 +142,7 @@ class InternalFunctions {
             const document = await Athena.database.funcs.fetchData<Character>(
                 'bankNumber',
                 bankNumber,
-                Collections.Characters,
+                Athena.database.collections.Characters,
             );
             if (!document) {
                 return false;
@@ -157,7 +156,7 @@ class InternalFunctions {
             await Athena.database.funcs.updatePartialData(
                 document._id.toString(),
                 { bank: document.bank },
-                Collections.Characters,
+                Athena.database.collections.Characters,
             );
         }
 
