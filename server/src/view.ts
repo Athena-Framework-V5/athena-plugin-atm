@@ -1,14 +1,13 @@
 import * as alt from 'alt-server';
+import * as Athena from '@AthenaServer/api';
 
 import atms from '@AthenaShared/information/atms';
-import { ServerBlipController } from '@AthenaServer/systems/blip';
-import { InteractionController } from '@AthenaServer/systems/interaction';
 import { CurrencyTypes } from '@AthenaShared/enums/currency';
 import { LocaleController } from '@AthenaShared/locale/locale';
 import { LOCALE_KEYS } from '@AthenaShared/locale/languages/keys';
 import { Character } from '@AthenaShared/interfaces/character';
 import { ATM_INTERACTIONS } from '../../shared/events';
-import { Athena } from '../../../../server/api/athena';
+import Database from '@stuyk/ezmongodb';
 
 const INTERACTION_RANGE = 1.5;
 class InternalFunctions {
@@ -59,7 +58,10 @@ class InternalFunctions {
      * @memberof InternalFunctions
      */
     static deposit(player: alt.Player, amount: number): boolean {
-        if (player.data.cash < amount) {
+        const data = Athena.document.character.get(player);
+        if (typeof data === 'undefined') return false;
+
+        if (data.cash < amount) {
             return false;
         }
 
@@ -83,7 +85,10 @@ class InternalFunctions {
      * @memberof InternalFunctions
      */
     static withdraw(player: alt.Player, amount: number): boolean {
-        if (player.data.bank < amount) {
+        const data = Athena.document.character.get(player);
+        if (typeof data === 'undefined') return false;
+
+        if (data.bank < amount) {
             return false;
         }
 
@@ -108,20 +113,23 @@ class InternalFunctions {
      * @memberof InternalFunctions
      */
     static async transfer(player: alt.Player, amount: number, bankNumber: string | number): Promise<boolean> {
+        const data = Athena.document.character.get(player);
+        if (typeof data === 'undefined') return false;
+
         if (typeof bankNumber === 'string') {
             bankNumber = parseInt(bankNumber);
         }
 
         // Check they are not transferring to self.
-        if (player.data.bankNumber === bankNumber) {
+        if (data.bankNumber === bankNumber) {
             return false;
         }
 
         const onlinePlayer = [...alt.Player.all].find(
-            (target) => target && target.data && target.data.bankNumber === bankNumber,
+            (target) => target && Athena.document.character.get(target).bank === bankNumber,
         );
 
-        if (amount > player.data.bank) {
+        if (amount > data.bank) {
             return false;
         }
 
@@ -135,11 +143,11 @@ class InternalFunctions {
                 return false;
             }
 
-            const msg = LocaleController.get(LOCALE_KEYS.PLAYER_RECEIVED_BLANK, `$${amount}`, player.data.name);
+            const msg = LocaleController.get(LOCALE_KEYS.PLAYER_RECEIVED_BLANK, `$${amount}`, data.name);
             Athena.player.emit.message(onlinePlayer, msg);
         } else {
             // Update by Document Route
-            const document = await Athena.database.funcs.fetchData<Character>(
+            const document = await Database.fetchData<Character>(
                 'bankNumber',
                 bankNumber,
                 Athena.database.collections.Characters,
@@ -153,7 +161,7 @@ class InternalFunctions {
             }
 
             document.bank += amount;
-            await Athena.database.funcs.updatePartialData(
+            await Database.updatePartialData(
                 document._id.toString(),
                 { bank: document.bank },
                 Athena.database.collections.Characters,
@@ -173,6 +181,9 @@ class InternalFunctions {
      * @memberof InternalFunctions
      */
     static transferCash(player: alt.Player, amount: number, id: string | number): boolean {
+        const data = Athena.document.character.get(player);
+        if (typeof data === 'undefined') return false;
+
         const target: alt.Player = [...alt.Player.all].find((x) => `${x.id}` === `${id}`);
         if (!target) {
             return false;
@@ -182,7 +193,7 @@ class InternalFunctions {
             return false;
         }
 
-        if (amount > player.data.cash) {
+        if (amount > data.cash) {
             return false;
         }
 
@@ -194,7 +205,7 @@ class InternalFunctions {
             return false;
         }
 
-        const msg = LocaleController.get(LOCALE_KEYS.PLAYER_RECEIVED_BLANK, `$${amount}`, player.data.name);
+        const msg = LocaleController.get(LOCALE_KEYS.PLAYER_RECEIVED_BLANK, `$${amount}`, data.name);
         Athena.player.emit.message(target, msg);
         return true;
     }
@@ -208,7 +219,7 @@ export class AtmFunctions {
         for (let i = 0; i < atms.length; i++) {
             const position = atms[i];
 
-            ServerBlipController.append({
+            Athena.controllers.blip.append({
                 text: 'ATM',
                 color: 11,
                 sprite: 207,
@@ -218,7 +229,7 @@ export class AtmFunctions {
                 uid: `atm-${i}`,
             });
 
-            InteractionController.add({
+            Athena.controllers.interaction.append({
                 position,
                 description: 'Access ATM',
                 range: INTERACTION_RANGE,

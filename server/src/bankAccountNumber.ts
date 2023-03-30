@@ -1,11 +1,7 @@
 import * as alt from 'alt-server';
-import { PlayerEvents } from '../../../../server/events/playerEvents';
-import { Global } from '../../../../server/systems/global';
-import { ATHENA_EVENTS_PLAYER } from '../../../../shared/enums/athenaEvents';
-import { BANK_CONFIG } from './config';
 import * as charRef from '../../../../shared/interfaces/character';
-import { Athena } from '../../../../server/api/athena';
-import { StateManager } from '../../../../server/systems/stateManager';
+import * as Athena from '@AthenaServer/api';
+import { BANK_CONFIG } from './config';
 
 const metaName = 'bankNumber';
 
@@ -18,22 +14,25 @@ declare module 'alt-server' {
 
 class InternalFunctions {
     static async handleSelect(player: alt.Player) {
-        if (player.data.bankNumber !== undefined && player.data.bankNumber !== null) {
-            Athena.player.emit.meta(player, metaName, player.data[metaName]);
+        const data = Athena.document.character.get(player);
+        if (typeof data === 'undefined') return;
+
+        if (data.bankNumber !== undefined && data.bankNumber !== null) {
+            Athena.player.emit.meta(player, metaName, data[metaName]);
             return;
         }
 
         // Increase the value outright
-        await Global.increase(metaName, 1, BANK_CONFIG.BANK_ACCOUNT_START_NUMBER);
-        const bankNumber = await Global.getKey<number>(metaName);
-        StateManager.set(player, metaName, bankNumber);
-        Athena.player.emit.meta(player, metaName, player.data[metaName]);
-        alt.log(`Created Bank Account # ${player.data[metaName]} for ${player.data.name}`);
+        await Athena.systems.global.increase(metaName, 1, BANK_CONFIG.BANK_ACCOUNT_START_NUMBER);
+        const bankNumber = await Athena.systems.global.getKey<number>(metaName);
+        Athena.document.character.set(player, metaName, bankNumber);
+        Athena.player.emit.meta(player, metaName, data[metaName]);
+        alt.log(`Created Bank Account # ${data[metaName]} for ${data.name}`);
     }
 }
 
 export class BankAccountNumber {
     static init() {
-        PlayerEvents.on(ATHENA_EVENTS_PLAYER.SELECTED_CHARACTER, InternalFunctions.handleSelect);
+        Athena.player.events.on('selected-character', InternalFunctions.handleSelect);
     }
 }
