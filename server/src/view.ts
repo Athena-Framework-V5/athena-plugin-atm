@@ -126,7 +126,9 @@ class InternalFunctions {
         }
 
         const onlinePlayer = [...alt.Player.all].find(
-            (target) => target && Athena.document.character.get(target).bank === bankNumber,
+            (x) =>
+                Athena.document.character.get(x).bankNumber &&
+                Athena.document.character.get(x).bankNumber === bankNumber,
         );
 
         if (amount > data.bank) {
